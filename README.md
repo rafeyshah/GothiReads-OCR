@@ -141,14 +141,17 @@ All zero-shot models were re-evaluated on the same **valid_clean.csv** split usi
 
 ### 📊 **Updated Zero-Shot Results**
 
-| run                        | CER          | WER          |
-| -------------------------- | ------------ | ------------ |
-| **paddle-ocr-server-rec**             | **0.203298** | **0.755115** |
-| **trocr-handwritten-beam** | 0.356683     | 2.168666     |
-| paddle-ocr-mobile-rec      | 1.835468     | 1.411341     |
-| trocr-handwritten-greedy   | 0.383486     | 2.331641     |
-| trocr-large-printed        | 0.840328     | 5.109445     |
-|donut_sbhavy_donut-base-ocr | 0.596529     | 1.071143     |
+| run                         | CER          | WER          |
+| --------------------------- | ------------ | ------------ |
+| **paddle-ocr-server-rec**   | **0.203298** | **0.755115** |
+| **trocr-handwritten-beam**  | 0.356683     | 2.168666     |
+| paddle-ocr-mobile-rec       | 1.835468     | 1.411341     |
+| trocr-handwritten-greedy    | 0.383486     | 2.331641     |
+| trocr-large-printed         | 0.840328     | 5.109445     |
+| donut_sbhavy_donut-base-ocr | 0.596529     | 1.071143     |
+| parseq                      | 0.7040       | 0.9927       |
+| abinet                      | 0.7576       | 0.9932       |
+| vitstr                      | 0.7573       | 0.9934       |
 
 ### 🔎 Interpretation
 
