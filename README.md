@@ -1,8 +1,8 @@
 # 🏛️ Gothi-Read
 
-**Track B:** *OCR + Font Group Recognition (Per-Character Multi-Task)*
-**Author:** Abdul Rafey
-**Repository:** [https://github.com/rafeyshah/gothi-read](https://github.com/rafeyshah/gothi-read)
+**Track B:** *OCR + Font Group Recognition (Per-Character Multi-Task)*  
+**Author:** Abdul Rafey  
+**Repository:** https://github.com/rafeyshah/gothi-read
 
 ---
 
@@ -49,57 +49,9 @@ pip install torch torchvision torchaudio transformers jiwer pillow regex matplot
 * Length mismatches : 0
 * ✅ 94.7 % of validation lines are clean — ready for evaluation.
 
-## 🔡 Unicode-Safe Data Loader and Alignment
-
-* Implemented in `src/icdar24.py`.
-* Uses `regex \X` to split Unicode grapheme clusters — accurate for ligatures and diacritics.
-* Includes two dataset classes:
-
-  * `LineDataset` for flat folder structures.
-  * `FlexibleLineDataset` for nested FAUBox-style layouts.
-* Strict assertions ensure `len(characters) == len(font_labels)` for every sample.
-* Optional filters for Latin-8 font groups and subset selection.
-
-## 🖼 Visualization
-
-`visualize_line.py` renders each line image with colored font labels per character.
-
-**Features**
-
-* Shows image + text with per-char color coding by font group.
-* Legend auto-maps font labels → colors.
-* Trims length mismatches safely.
-* Saves visualizations to `exp/viz/`.
-
-**Example command**
-
-```bash
-python scripts/visualize_line.py --manifest manifests/train.csv --num 8
-```
-
-## 🧮 Metrics Computation
-
-* `src/metrics.py` computes:
-
-  * **CER** (Character Error Rate)
-  * **WER** (Word Error Rate)
-* Uses **JiWER** for standard evaluation.
-* Normalization pipeline prepared for future expansion to font-CER.
-* Outputs aggregated JSON metrics for consistency across models.
-
 ## 🧠 Unified Model Evaluation Harness
 
 `harness.py` provides a single interface to evaluate any OCR model.
-
-**Functions**
-
-```python
-predict_lines(model_name, images) → List[str]  
-evaluate(text_preds, text_gts) → {CER, WER, per_book, per_fontmix}
-```
-
-**Image Preprocessing**
-grayscale → resize(height = 64) → pad to max width
 
 **Outputs saved to**
 
@@ -107,39 +59,16 @@ grayscale → resize(height = 64) → pad to max width
 runs/<model>/<date>/
   preds.txt  
   metrics.json  
-  per_line.csv  # img_id, gt, pred, CER
+  per_line.csv
 ```
-
-Example:
-
-```bash
-python scripts/day3_harness.py   --manifest manifests/valid.csv   --model microsoft/trocr-base-printed   --height 64   --limit 1000
-```
-
-## ✅ Achievements
-
-* Environment and GPU setup completed
-* Dataset manifests validated (0 length mismatches)
-* Unicode-safe data loader implemented
-* Visualization utility verified
-* Metric computation (CER/WER) operational
-* Unified evaluation harness tested successfully
-* Zero-shot TrOCR with beam vs greedy
-* Zero-shot **PaddleOCR (PP-OCRv4 English)** baseline benchmarked on the same validation split.
 
 ---
 
-### 🔁 Updated Zero-Shot OCR Baselines
+## 📊 OCR Benchmarks
 
-All zero-shot models were re-evaluated on the same **valid_clean.csv** split using the new GPU-based TrOCR evaluation script (batched, no destructive resizing).
+### 🔁 Zero-Shot OCR Baselines
 
-### 📌 Updated Observations (TrOCR)
-
-* **TrOCR-base-handwritten** performs *much better* than printed models on historical Gothic / multi-font data.
-* **TrOCR-large-printed** performs poorly in zero-shot mode due to domain mismatch.
-* **PaddleOCR PP-OCRv4** remains the strongest zero-shot recognizer.
-
-### 📊 **Updated Zero-Shot Results**
+All zero-shot models were evaluated on the same **valid_clean.csv** split using the unified evaluation harness.
 
 | run                         | CER          | WER          |
 | --------------------------- | ------------ | ------------ |
@@ -148,32 +77,36 @@ All zero-shot models were re-evaluated on the same **valid_clean.csv** split usi
 | paddle-ocr-mobile-rec       | 1.835468     | 1.411341     |
 | trocr-handwritten-greedy    | 0.383486     | 2.331641     |
 | trocr-large-printed         | 0.840328     | 5.109445     |
-| donut_sbhavy_donut-base-ocr | 0.596529     | 1.071143     |
+| donut-base-ocr              | 0.596529     | 1.071143     |
 | parseq                      | 0.7040       | 0.9927       |
 | abinet                      | 0.7576       | 0.9932       |
 | vitstr                      | 0.7573       | 0.9934       |
 
-### 🔎 Interpretation
+---
 
-* PaddleOCR → **Best zero-shot** due to robustness and mixed-font training.
-* TrOCR-handwritten → **Best TroCR variant**, recommended for fine-tuning.
-* TrOCR-large-printed → Not suitable for zero-shot historical OCR.
-* WER > CER is expected because word-level errors amplify even small character mistakes.
+### 🧪 Fine-Tuned PaddleOCR
+
+The strongest zero-shot model (**PaddleOCR – server recognizer**) was subsequently **fine-tuned for 5 epochs** on the training split and evaluated on the same `valid_clean.csv` subset.
+
+**Evaluation metrics (lower is better):**
+
+* **CER (Character Error Rate): 0.0128 (~1.3 %)**  
+* **WER (Word Error Rate): 0.0796 (~8 %)**
+
+This represents a **substantial improvement over the zero-shot baseline**, achieving high-quality character-level transcription across historical Gothic and mixed-font data. Performance is strongest on single-font lines, with higher (expected) error rates on mixed-font samples.
+
+The best checkpoint was selected by **minimum validation CER**, and decoding parameters were fixed. This fine-tuned PaddleOCR model is retained as a **secondary CTC-based OCR** for later ensembling and character-level font alignment.
 
 ---
 
 ## 🔜 Next Steps
 
-* Add font-classification head to OCR encoder for multi-task learning.
-* Extend PaddleOCR experiments and integrate additional models: Donut, MMOCR, docTR.
-* Benchmark all models on the same validation split.
-* Compute joint **text CER + font-CER**.
-* Build a leaderboard under `/runs/` for cross-model comparisons.
+* Fine-tune **TrOCR-handwritten** and select the primary OCR by lowest CER.
+* Add a font-classification head for per-character font prediction.
+* Ensemble CTC (PaddleOCR) and seq2seq (TrOCR) models.
+* Compute joint **text CER + font-CER** for final evaluation.
 
 ## 🏁 Summary
 
-**Gothi-Read** now includes a validated data pipeline, visualization system, and unified model evaluation framework.
-All data integrity, alignment, and evaluation steps are complete.
-The project is ready for multi-model benchmarking and fine-tuning experiments for Pattern Recognition Lab.
+**Gothi-Read** now includes a validated data pipeline, visualization system, and unified model evaluation framework. OCR benchmarking and fine-tuning are complete for PaddleOCR, and the project is ready for multi-model comparison and multi-task font recognition experiments.
 
-PaddleOCR (PP-OCRv4, English, detection disabled, line-crop recognizer) currently achieves the best CER/WER among the evaluated models.
