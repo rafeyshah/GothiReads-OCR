@@ -86,7 +86,7 @@ All zero-shot models were evaluated on the same **valid_clean.csv** split using 
 
 ### 🧪 Fine-Tuned PaddleOCR
 
-The strongest zero-shot model (**PaddleOCR – server recognizer**) was subsequently **fine-tuned for 5 epochs** on the training split and evaluated on the same `valid_clean.csv` subset.
+The strongest zero-shot model (**PaddleOCR – server recognizer**) was subsequently **fine-tuned for 5 epochs** on the training split and evaluated on the `test_clean.csv` subset.
 
 **Evaluation metrics (lower is better):**
 
