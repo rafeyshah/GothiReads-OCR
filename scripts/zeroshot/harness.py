@@ -128,18 +128,36 @@ def load_val_split(csv_path: str, limit=None) -> Tuple[List[str], List[str], Lis
     ids, imgs, gts = [], [], []
     with open(csv_path, newline="", encoding="utf-8") as f:
         for r in csv.DictReader(f):
-            if r.get("ok") != "TRUE":
+            # accept TRUE/True/1 (keep backwards compatibility)
+            ok = str(r.get("ok", "")).strip().upper()
+            if ok not in {"TRUE", "1", "YES"}:
                 continue
-            img, txt = r["image_path"], r["txt_path"]
-            if not (img and txt):
+
+            img = (r.get("image_path") or "").strip()
+            if not img:
                 continue
-            try:
-                gt = Path(txt).read_text(encoding="utf-8").strip()
-            except:
-                continue
+
+            # NEW: prefer gt_text if present
+            gt_text = r.get("gt_text")
+            if gt_text is not None and str(gt_text).strip() != "":
+                gt = str(gt_text)
+            else:
+                # OLD: fall back to txt_path
+                txt = (r.get("txt_path") or "").strip()
+                if not txt:
+                    continue
+                try:
+                    gt = Path(txt).read_text(encoding="utf-8")
+                except Exception:
+                    continue
+
+            # Keep exact behavior: strip only trailing newlines, not internal spaces
+            gt = gt.strip()
+
             ids.append(r.get("id", Path(img).stem))
             imgs.append(img)
             gts.append(gt)
+
             if limit and len(ids) >= limit:
                 break
     return ids, imgs, gts
