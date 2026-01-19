@@ -149,12 +149,50 @@ This represents a substantial improvement over the zero-shot baseline and serves
 
 ---
 
-## 🔜 Next Steps
+## 🅱️ Font Group Recognition (Per-Character)
 
-* Fine-tune **TrOCR-handwritten** and select the primary OCR by lowest CER
-* Add a font-classification head for per-character font prediction
-* Ensemble CTC (PaddleOCR) and seq2seq (TrOCR) models
-* Compute joint **text CER + font-CER** for final evaluation
+Font recognition is implemented as a **second-stage classifier** that operates on top of a frozen OCR recognizer.
+Rather than predicting fonts directly from raw images, Gothi-Read **reuses intermediate OCR features** that already encode visual style information.
+
+### Design Rationale
+
+* OCR encoders naturally learn **font- and style-aware representations**
+* Font prediction is treated as a **token-level classification** problem
+* Decoupling OCR and font learning improves stability and debuggability
+
+### Pipeline Overview
+
+1. Input image is passed through a **frozen PaddleOCR recognizer**
+2. Intermediate sequence features are extracted (`im2seq`, pre-language)
+3. Grapheme-level time ranges (from alignment) define pooling windows
+4. A lightweight font head predicts the font group per grapheme
+
+### Model Components
+
+* **Feature source:** `im2seq` (pre-language, style-rich)
+* **Pooling:** attention + max pooling over alignment ranges
+* **Context modeling:** depthwise Conv1D or optional BiGRU across graphemes
+* **Classifier:** shallow MLP head
+* **Loss:** weighted cross-entropy with focal term and label smoothing
+
+### Training Characteristics
+
+* OCR backbone is **fully frozen**
+* Only the font head and pooling module are trained
+* Tokens near font boundaries are down-weighted to reduce alignment noise
+* Samples containing font transitions are oversampled
+
+### Current Performance (Validation)
+
+* **Micro accuracy:** ~82–83 %
+* **Macro accuracy:** ~80–81 %
+
+Accuracy is primarily limited by:
+
+* strong class imbalance in validation data
+* noisy alignment near font boundaries
+
+Interior (non-boundary) tokens consistently achieve higher accuracy than boundary tokens.
 
 ---
 
