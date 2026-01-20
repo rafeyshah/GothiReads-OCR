@@ -19,7 +19,7 @@ Global:
   character_dict_path: ./ppocr/utils/gothi_dict.txt
   max_text_length: &max_text_length 50
   infer_mode: false
-  use_space_char: true
+  use_space_char: false
   distributed: true
   save_res_path: ./output/rec/predicts_ppocrv5.txt
   d2s_train_image_shape: [3, 48, 320]

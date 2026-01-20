@@ -2,3 +2,4 @@ dataset
 *.rar
 token.txt
 scripts/font_recognition/old
+eval_font.py
